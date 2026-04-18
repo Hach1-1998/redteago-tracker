@@ -137,7 +137,6 @@
     .month-tab.active .count { background: rgba(255,255,255,0.25); color: #fff; }
     .month-tab:hover:not(.active) { border-color: #ff6a00; color: #ff6a00; }
 
-    /* Add month inline */
     .add-month-wrap {
       display: flex;
       align-items: center;
@@ -168,10 +167,7 @@
     }
     .add-month-btn:hover { border-color: #ff6a00; color: #ff6a00; border-style: solid; }
 
-    /* Month tab with delete */
-    .month-tab-manual {
-      position: relative;
-    }
+    .month-tab-manual { position: relative; }
     .month-tab-manual .del-month {
       display: none;
       margin-left: 2px;
@@ -205,6 +201,25 @@
     td { padding: 9px 8px; vertical-align: middle; font-size: 12px; }
     td.num { color: #888; text-align: center; width: 36px; }
     td.cost { color: #ff6a00; font-weight: 600; text-align: center; }
+
+    /* Editable inputs */
+    td input[type="text"],
+    td input[type="number"],
+    td select {
+      background: #111;
+      border: 1px solid #333;
+      color: #ddd;
+      border-radius: 4px;
+      padding: 4px 6px;
+      font-size: 12px;
+      width: 100%;
+      max-width: 150px;
+    }
+    td input[type="number"] { max-width: 80px; }
+    td input:focus, td select:focus { outline: none; border-color: #ff6a00; }
+    td select { cursor: pointer; }
+    td select option { background: #1a1a1a; }
+
     td.title-cell { max-width: 340px; min-width: 220px; }
     td.title-cell .title-text {
       display: -webkit-box;
@@ -214,17 +229,6 @@
       color: #ddd;
       line-height: 1.5;
     }
-
-    .region-select {
-      background: transparent;
-      border: 1px solid #333;
-      color: #ccc;
-      border-radius: 4px;
-      padding: 3px 6px;
-      font-size: 11px;
-      cursor: pointer;
-    }
-    .region-select:focus { outline: none; border-color: #ff6a00; }
 
     .metric-cell { white-space: nowrap; }
     .metric-val { font-weight: 600; color: #e0e0e0; }
@@ -297,7 +301,6 @@
     .form-group select option { background: #1a1a1a; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 
-    /* Month modal special */
     .month-preview-grid {
       display: flex;
       flex-wrap: wrap;
@@ -362,7 +365,6 @@
     }
     .del-btn:hover { color: #f44336; }
 
-    /* Month tag on row */
     .month-tag {
       display: inline-block;
       background: #1e1000;
@@ -375,19 +377,30 @@
     }
     .month-tag.manual { border-color: #ff6a00; color: #ff6a00; }
 
-    /* Section divider in table by month */
-    tr.month-divider td {
-      background: #141414;
-      color: #ff6a00;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 6px 10px;
-      letter-spacing: 1px;
-      border-bottom: 1px solid #222;
+    /* Loading overlay */
+    .page-loading {
+      position: fixed;
+      inset: 0;
+      background: #0d0d0d;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      gap: 16px;
     }
+    .page-loading .logo { color: #ff6a00; font-size: 14px; letter-spacing: 2px; }
+    .page-loading .sub { color: #555; font-size: 12px; }
   </style>
 </head>
 <body>
+
+<!-- Page Loading -->
+<div class="page-loading" id="pageLoading">
+  <div class="logo">Redteago Tracker</div>
+  <div class="spinner" style="width:24px;height:24px;border-width:3px"></div>
+  <div class="sub">正在从 Google Sheets 加载数据...</div>
+</div>
 
 <!-- Header -->
 <div class="header">
@@ -415,7 +428,6 @@
 <!-- Toolbar -->
 <div class="toolbar">
   <button class="btn btn-primary" onclick="openAddModal()">＋ 添加新帖子</button>
-  <button class="btn btn-outline" onclick="saveData()">💾 保存更改</button>
   <button class="btn btn-outline" id="refreshAllBtn" onclick="refreshAll()">🔄 刷新数据</button>
   <button class="btn btn-outline" onclick="exportCSV()">📄 导出 CSV</button>
   <button class="btn btn-outline" onclick="exportExcel()">📊 导出 Excel</button>
@@ -438,21 +450,21 @@
     <thead>
       <tr>
         <th style="width:36px">#</th>
-        <th style="width:70px" onclick="sortBy('cost')">消耗金额</th>
+        <th style="width:80px" onclick="sortBy('cost')">消耗金额</th>
         <th onclick="sortBy('title')">标题</th>
-        <th style="width:70px">地区</th>
+        <th style="width:70px" onclick="sortBy('region')">地区</th>
         <th style="width:80px">内容形式</th>
         <th style="width:80px">帖文类型</th>
         <th style="width:80px">主推卖点</th>
-        <th style="width:120px">发布账号</th>
+        <th style="width:100px">发布账号</th>
         <th style="width:80px" onclick="sortBy('date')">发布时间</th>
         <th style="width:90px" onclick="sortBy('month')">所属月份</th>
-        <th style="width:130px">社群</th>
+        <th style="width:130px" onclick="sortBy('subreddit')">社群</th>
         <th style="width:90px" onclick="sortBy('upvotes')">Upvote</th>
         <th style="width:90px" onclick="sortBy('comments')">Comment</th>
-        <th style="width:60px">Views</th>
+        <th style="width:60px" onclick="sortBy('views')">Views</th>
         <th style="width:70px">Hot</th>
-        <th style="width:50px">By</th>
+        <th style="width:60px">By</th>
         <th style="width:50px">链接</th>
         <th style="width:30px"></th>
       </tr>
@@ -545,8 +557,7 @@
 <div class="modal-overlay" id="monthModal">
   <div class="modal" style="width:500px">
     <div class="modal-title">管理月份标签</div>
-    <p style="font-size:12px;color:#888;margin-bottom:14px">手动添加月份标签，可用于在月份筛选栏显示，也可指定给帖子。已有帖子数据的月份会自动显示，无需手动添加。</p>
-
+    <p style="font-size:12px;color:#888;margin-bottom:14px">手动添加月份标签，可用于在月份筛选栏显示，也可指定给帖子。</p>
     <div style="display:flex;gap:8px;align-items:center">
       <div class="form-group" style="flex:1">
         <label>添加月份（格式：2026-03 或 2026年3月）</label>
@@ -554,18 +565,13 @@
       </div>
       <button class="btn btn-primary" style="margin-top:16px;white-space:nowrap" onclick="addManualMonth()">添加</button>
     </div>
-
     <div style="margin-top:6px;font-size:11px;color:#555" id="monthAddErr"></div>
-
     <div style="margin-top:16px;font-size:11px;color:#666;margin-bottom:6px">已有月份标签：</div>
     <div class="month-preview-grid" id="monthPreviewGrid">
       <span class="month-empty-hint">暂无手动添加的月份</span>
     </div>
-
     <div style="margin-top:16px;font-size:11px;color:#666;margin-bottom:6px">来自帖子数据的月份（自动）：</div>
-    <div class="month-preview-grid" id="autoMonthGrid" style="background:#0d0d0d">
-    </div>
-
+    <div class="month-preview-grid" id="autoMonthGrid" style="background:#0d0d0d"></div>
     <div class="modal-actions">
       <button class="btn btn-primary" onclick="closeMonthModal()">完成</button>
     </div>
@@ -574,38 +580,194 @@
 
 <script>
 // ──────────────────────────────────────────────
+// CONFIG
+// ──────────────────────────────────────────────
+const GSCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7XMkMaf9vBlMMNHnzEu9ljDmslU5dS7zUwHJn_sohUXwmk0jx5cQIPHqM1-tiuluW/exec';
+
+// Column indices (0-indexed, matching Google Sheet columns A-S)
+// 0:标题, 1:消耗金额, 2:地区, 3:内容形式, 4:帖文类型, 5:主推卖点,
+// 6:发布账号, 7:发布时间, 8:社群, 9:所属月份, 10:Hot, 11:By,
+// 12:链接, 13:帖子ID, 14:upvotes, 15:comments, 16:views, 17:score, 18:upvoteRatio
+
+// ──────────────────────────────────────────────
 // Data Store
 // ──────────────────────────────────────────────
-const STORAGE_KEY = 'redteago_reddit_tracker_v1';
 let posts = [];
-let manualMonths = []; // user-added month labels: ["2026-04", "2026-05", ...]
+let manualMonths = [];
 let sortField = 'date';
 let sortAsc = false;
 let activeMonth = 'all';
 let prevStats = { upvotes: 0, comments: 0 };
+let isLoading = true;
 
-function loadData() {
+// ──────────────────────────────────────────────
+// Google Sheets API
+// ──────────────────────────────────────────────
+async function gsFetch(action, params = {}) {
+  const url = new URL(GSCRIPT_URL);
+  url.searchParams.set('action', action);
+  for (const [k, v] of Object.entries(params)) {
+    url.searchParams.set(k, typeof v === 'object' ? JSON.stringify(v) : v);
+  }
+
+  let text;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      posts = parsed.posts || [];
-      manualMonths = parsed.manualMonths || [];
-      prevStats = parsed.prevStats || { upvotes: 0, comments: 0 };
+    text = await fetch(url.toString(), { method: 'GET' });
+    text = await text.text();
+  } catch(e) {
+    throw new Error('网络请求失败，请检查网络连接');
+  }
+
+  // Google Apps Script redirects GET to echo endpoint
+  const match = text.match(/"user_content_key"\s*,\s*"([^"]+)"/);
+  if (match) {
+    try {
+      const r = await fetch(match[1]);
+      text = await r.text();
+    } catch(e) {
+      throw new Error('代理请求失败');
     }
-  } catch(e) { posts = []; manualMonths = []; }
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch(e) {
+    throw new Error('解析响应失败: ' + text.slice(0, 100));
+  }
 }
 
-function saveData(silent) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ posts, manualMonths, prevStats }));
-  if (!silent) showToast('已保存');
+async function gsPost(action, data) {
+  const url = new URL(GSCRIPT_URL);
+  url.searchParams.set('action', action);
+
+  let text;
+  try {
+    text = await fetch(url.toString(), {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: { 'Content-Type': 'text/plain' }
+    });
+    text = await text.text();
+  } catch(e) {
+    throw new Error('网络请求失败');
+  }
+
+  // Follow redirect for POST
+  const redirectMatch = text.match(/HREF="([^"]+)"/);
+  if (redirectMatch) {
+    try {
+      text = await fetch(redirectMatch[1]).then(r => r.text());
+    } catch(e) {}
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch(e) {
+    return { status: 'ok' }; // Assume ok if can't parse
+  }
+}
+
+// ──────────────────────────────────────────────
+// Convert between row array and post object
+// ──────────────────────────────────────────────
+function rowToPost(row) {
+  if (!row || !row[13]) return null; // No postId
+  return {
+    id: String(row[13] || ''),
+    title: String(row[0] || ''),
+    cost: parseFloat(row[1]) || 0,
+    region: String(row[2] || ''),
+    contentType: String(row[3] || ''),
+    postType: String(row[4] || ''),
+    sellingPoint: String(row[5] || ''),
+    account: String(row[6] || ''),
+    date: String(row[7] || ''),
+    subreddit: String(row[8] || ''),
+    assignedMonth: String(row[9] || ''),
+    hot: row[10] ? String(row[10]) : null,
+    by: String(row[11] || ''),
+    url: String(row[12] || ''),
+    postId: String(row[13] || ''),
+    upvotes: parseInt(row[14]) || 0,
+    upvotesPrev: parseInt(row[14]) || 0,
+    comments: parseInt(row[15]) || 0,
+    commentsPrev: parseInt(row[15]) || 0,
+    views: row[16] ? parseInt(row[16]) : null,
+    score: parseFloat(row[17]) || 0,
+    upvoteRatio: parseFloat(row[18]) || 0,
+    lastFetched: null
+  };
+}
+
+function postToRow(p) {
+  return [
+    p.title || '',
+    p.cost || 0,
+    p.region || '',
+    p.contentType || '',
+    p.postType || '',
+    p.sellingPoint || '',
+    p.account || '',
+    p.date || '',
+    p.subreddit || '',
+    p.assignedMonth || '',
+    p.hot || '',
+    p.by || '',
+    p.url || '',
+    p.postId || p.id || '',
+    p.upvotes || 0,
+    p.comments || 0,
+    p.views || '',
+    p.score || 0,
+    p.upvoteRatio || 0
+  ];
+}
+
+// ──────────────────────────────────────────────
+// Load data from Google Sheets
+// ──────────────────────────────────────────────
+async function loadData() {
+  try {
+    const result = await gsFetch('getAll');
+    const rows = result.data || [];
+    if (rows.length <= 1) {
+      posts = [];
+      return;
+    }
+    posts = rows.slice(1).map(rowToPost).filter(Boolean);
+    prevStats = {
+      upvotes: posts.reduce((s, p) => s + (p.upvotes || 0), 0),
+      comments: posts.reduce((s, p) => s + (p.comments || 0), 0)
+    };
+  } catch(e) {
+    console.error('Load error:', e);
+    posts = [];
+  }
+}
+
+// Save: add, update, delete
+async function gsAddPost(post) {
+  await gsPost('add', { row: postToRow(post) });
+}
+
+async function gsUpdatePost(post) {
+  await gsPost('update', { postId: post.postId || post.id, row: postToRow(post) });
+}
+
+async function gsDeletePost(postId) {
+  await gsPost('delete', { postId });
+}
+
+async function saveAll() {
+  for (const p of posts) {
+    await gsUpdatePost(p);
+  }
 }
 
 // ──────────────────────────────────────────────
 // Month helpers
 // ──────────────────────────────────────────────
 function parseMonthKey(raw) {
-  // Accept: "2026-3", "2026-03", "2026/3", "2026年3月"
   if (!raw) return null;
   const s = raw.trim();
   let m = s.match(/^(\d{4})[-\/](\d{1,2})$/);
@@ -616,6 +778,7 @@ function parseMonthKey(raw) {
 }
 
 function monthLabel(key) {
+  if (!key) return '';
   const [y, mo] = key.split('-');
   return y + '年' + mo + '月';
 }
@@ -623,22 +786,16 @@ function monthLabel(key) {
 function getAutoMonths() {
   const set = {};
   posts.forEach(p => {
-    if (!p.date) return;
-    const parts = p.date.split('/');
-    if (parts.length >= 2) {
-      const key = parts[0] + '-' + parts[1];
-      set[key] = (set[key] || 0) + 1;
-    }
-    // Also check manually assigned month
-    if (p.assignedMonth) {
+    const m = getPostMonth(p);
+    if (m) set[m] = (set[m] || 0) + 1;
+    if (p.assignedMonth && p.assignedMonth !== m) {
       set[p.assignedMonth] = set[p.assignedMonth] || 0;
     }
   });
-  return set; // { "2026-3": 5, ... }
+  return set;
 }
 
 function getAllMonths() {
-  // Merge manual + auto, sorted desc
   const auto = getAutoMonths();
   const all = new Set([...manualMonths, ...Object.keys(auto)]);
   return Array.from(all).sort((a, b) => {
@@ -687,7 +844,7 @@ function addManualMonth() {
   errEl.textContent = '';
   manualMonths.push(key);
   manualMonths.sort();
-  saveData(true);
+  localStorage.setItem('rt_manual_months', JSON.stringify(manualMonths));
   document.getElementById('newMonthInput').value = '';
   renderMonthPreview();
   showToast('月份已添加：' + monthLabel(key));
@@ -695,7 +852,7 @@ function addManualMonth() {
 
 function removeManualMonth(key) {
   manualMonths = manualMonths.filter(m => m !== key);
-  saveData(true);
+  localStorage.setItem('rt_manual_months', JSON.stringify(manualMonths));
   renderMonthPreview();
 }
 
@@ -704,7 +861,6 @@ function renderMonthPreview() {
   const manualGrid = document.getElementById('monthPreviewGrid');
   const autoGrid = document.getElementById('autoMonthGrid');
 
-  // Manual months
   if (manualMonths.length === 0) {
     manualGrid.innerHTML = '<span class="month-empty-hint">暂无手动添加的月份</span>';
   } else {
@@ -719,7 +875,6 @@ function renderMonthPreview() {
       </div>`).join('');
   }
 
-  // Auto months
   const autoKeys = Object.keys(autoMonths).sort((a,b)=>{
     const [ay,am]=a.split('-').map(Number),[by,bm]=b.split('-').map(Number);
     return (by*100+bm)-(ay*100+am);
@@ -734,9 +889,6 @@ function renderMonthPreview() {
   }
 }
 
-// ──────────────────────────────────────────────
-// Month Tabs render
-// ──────────────────────────────────────────────
 function renderMonthTabs() {
   const autoMonths = getAutoMonths();
   const allMonths = getAllMonths();
@@ -765,9 +917,6 @@ function setMonth(m) {
   renderTable();
 }
 
-// ──────────────────────────────────────────────
-// Populate month select in Add modal
-// ──────────────────────────────────────────────
 function populateMonthSelect() {
   const sel = document.getElementById('f_month');
   const allMonths = getAllMonths();
@@ -882,8 +1031,10 @@ async function fetchAndAdd() {
     if (!accountInput.value) accountInput.value = data.author;
     const dateStr = formatDate(data.created);
 
+    const postId = 'rt_' + Date.now();
     const post = {
-      id: Date.now().toString(),
+      id: postId,
+      postId,
       url,
       title: titleInput.value || data.title,
       region: document.getElementById('f_region').value,
@@ -897,6 +1048,8 @@ async function fetchAndAdd() {
       upvotes: data.upvotes, upvotesPrev: data.upvotes,
       comments: data.comments, commentsPrev: data.comments,
       views: data.views,
+      score: data.score,
+      upvoteRatio: data.upvoteRatio,
       cost: parseFloat(document.getElementById('f_cost').value) || 0,
       by: document.getElementById('f_by').value,
       hot: null,
@@ -904,17 +1057,20 @@ async function fetchAndAdd() {
     };
 
     posts.unshift(post);
-    saveData(true);
+    await gsAddPost(post);
     renderAll();
     closeAddModal();
-    showToast('✅ 帖子已添加并抓取成功');
+    showToast('✅ 帖子已添加并同步到 Google Sheets');
   } catch(e) {
     setFetchStatus('抓取失败：' + e.message + '（可手动填写标题后添加）', 'err');
     const titleInput = document.getElementById('f_title');
     if (titleInput.value) {
       const subredditMatch = url.match(/\/r\/([^/]+)/);
+      const postId = 'rt_' + Date.now();
       const post = {
-        id: Date.now().toString(), url,
+        id: postId,
+        postId,
+        url,
         title: titleInput.value,
         region: document.getElementById('f_region').value,
         contentType: document.getElementById('f_contentType').value,
@@ -925,11 +1081,13 @@ async function fetchAndAdd() {
         assignedMonth,
         subreddit: subredditMatch ? 'r/' + subredditMatch[1] : '',
         upvotes: 0, upvotesPrev: 0, comments: 0, commentsPrev: 0,
-        views: null, cost: parseFloat(document.getElementById('f_cost').value) || 0,
-        by: document.getElementById('f_by').value, hot: null, lastFetched: null
+        views: null, score: 0, upvoteRatio: 0,
+        cost: parseFloat(document.getElementById('f_cost').value) || 0,
+        by: document.getElementById('f_by').value,
+        hot: null, lastFetched: null
       };
       posts.unshift(post);
-      saveData(true);
+      await gsAddPost(post);
       renderAll();
       closeAddModal();
       showToast('⚠️ 已手动添加，数据待刷新');
@@ -968,15 +1126,17 @@ async function refreshAll() {
       post.upvotes = data.upvotes;
       post.comments = data.comments;
       post.views = data.views;
+      post.score = data.score;
+      post.upvoteRatio = data.upvoteRatio;
       if (!post.title && data.title) post.title = data.title;
       if (!post.subreddit && data.subreddit) post.subreddit = data.subreddit;
       post.lastFetched = new Date().toISOString();
+      await gsUpdatePost(post);
       ok++;
     } catch(e) { fail++; }
     await sleep(300);
   }
 
-  saveData(true);
   renderAll();
   btn.disabled = false;
   btn.innerHTML = '🔄 刷新数据';
@@ -988,11 +1148,26 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 // ──────────────────────────────────────────────
 // Delete
 // ──────────────────────────────────────────────
-function deletePost(id) {
-  if (!confirm('确定要删除这条帖子记录吗？')) return;
-  posts = posts.filter(p => p.id !== id);
-  saveData(true);
-  renderAll();
+async function deletePost(id) {
+  if (!confirm('确定要删除这条帖子记录吗？数据将从 Google Sheets 中移除。')) return;
+  const post = posts.find(p => p.id === id);
+  if (post) {
+    await gsDeletePost(post.postId || post.id);
+    posts = posts.filter(p => p.id !== id);
+    renderAll();
+    showToast('已删除');
+  }
+}
+
+// ──────────────────────────────────────────────
+// Inline edit
+// ──────────────────────────────────────────────
+async function updateField(id, field, value) {
+  const post = posts.find(p => p.id === id);
+  if (post) {
+    post[field] = value;
+    await gsUpdatePost(post);
+  }
 }
 
 // ──────────────────────────────────────────────
@@ -1017,6 +1192,9 @@ function getFilteredSorted() {
     else if (sortField === 'comments') { va = a.comments||0; vb = b.comments||0; }
     else if (sortField === 'cost') { va = a.cost||0; vb = b.cost||0; }
     else if (sortField === 'month') { va = getPostMonth(a)||''; vb = getPostMonth(b)||''; }
+    else if (sortField === 'region') { va = a.region||''; vb = b.region||''; }
+    else if (sortField === 'subreddit') { va = a.subreddit||''; vb = b.subreddit||''; }
+    else if (sortField === 'views') { va = a.views||0; vb = b.views||0; }
     else { va = (a.title||'').toLowerCase(); vb = (b.title||'').toLowerCase(); }
     if (va < vb) return sortAsc ? -1 : 1;
     if (va > vb) return sortAsc ? 1 : -1;
@@ -1077,25 +1255,51 @@ function renderTable() {
 
     return `<tr id="row-${p.id}">
       <td class="num">${i+1}</td>
-      <td class="cost">${p.cost||''}</td>
+      <td class="cost">
+        <input type="number" value="${p.cost||0}" min="0" style="width:70px;text-align:center;color:#ff6a00;font-weight:600"
+          onchange="updateField('${p.id}','cost',parseFloat(this.value)||0)" />
+      </td>
       <td class="title-cell">
         <div class="title-text" title="${escHtml(p.title||'')}">${escHtml(p.title||'—')}</div>
       </td>
       <td>
-        <select class="region-select" onchange="updateField('${p.id}','region',this.value)" onblur="saveData(true)">
+        <select class="region-select" onchange="updateField('${p.id}','region',this.value)">
           <option value="">—</option>
           ${['CA','US','AU','SG','UK','MY'].map(r=>`<option value="${r}" ${p.region===r?'selected':''}>${r}</option>`).join('')}
         </select>
       </td>
-      <td style="color:#999">${p.contentType||'—'}</td>
-      <td style="color:#999">${p.postType||'—'}</td>
-      <td style="color:#999">${p.sellingPoint||'—'}</td>
-      <td style="color:#bbb;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(p.account||'')}">${escHtml(p.account||'—')}</td>
-      <td style="color:#888;white-space:nowrap">${p.date||'—'}</td>
+      <td>
+        <select onchange="updateField('${p.id}','contentType',this.value)" style="background:#111;border:1px solid #333;color:#ddd;border-radius:4px;padding:3px 6px;font-size:11px;width:100%;max-width:90px">
+          <option value="">—</option>
+          ${['UGC种草帖','官方帖','问答帖','活动帖'].map(v=>`<option value="${v}" ${p.contentType===v?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <select onchange="updateField('${p.id}','postType',this.value)" style="background:#111;border:1px solid #333;color:#ddd;border-radius:4px;padding:3px 6px;font-size:11px;width:100%;max-width:90px">
+          <option value="">—</option>
+          ${['图片','文字','视频','链接'].map(v=>`<option value="${v}" ${p.postType===v?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </td>
+      <td><input type="text" value="${escHtml(p.sellingPoint||'')}" style="max-width:80px"
+        onchange="updateField('${p.id}','sellingPoint',this.value)" placeholder="—" /></td>
+      <td style="color:#bbb;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(p.account||'')}">
+        <input type="text" value="${escHtml(p.account||'')}" style="max-width:95px;color:#bbb;background:transparent;border:1px solid transparent"
+          onfocus="this.style.borderColor='#333';this.style.background='#111'"
+          onblur="updateField('${p.id}','account',this.value);this.style.borderColor='transparent';this.style.background='transparent'" />
+      </td>
+      <td style="color:#888;white-space:nowrap">
+        <input type="text" value="${p.date||''}" style="width:90px;color:#888;background:transparent;border:1px solid transparent;text-align:center"
+          onfocus="this.style.borderColor='#333';this.style.background='#111'"
+          onblur="updateField('${p.id}','date',this.value);this.style.borderColor='transparent';this.style.background='transparent'" />
+      </td>
       <td style="white-space:nowrap">
         ${pm ? `<span class="month-tag ${p.assignedMonth?'manual':''}">${monthLabel(pm)}</span>` : '<span style="color:#555">—</span>'}
       </td>
-      <td style="color:#ccc;white-space:nowrap">${p.subreddit||'—'}</td>
+      <td style="color:#ccc;white-space:nowrap">
+        <input type="text" value="${escHtml(p.subreddit||'')}" style="max-width:110px;color:#ccc;background:transparent;border:1px solid transparent"
+          onfocus="this.style.borderColor='#333';this.style.background='#111'"
+          onblur="updateField('${p.id}','subreddit',this.value);this.style.borderColor='transparent';this.style.background='transparent'" />
+      </td>
       <td class="metric-cell">
         <span class="metric-val">${p.upvotes??'—'}</span>
         ${upChange!==0?`<span class="metric-change ${upChange>0?'up':'down'}">${upChange>0?'↑':'↓'} ${Math.abs(((upChange/upBase)*100).toFixed(1))}%</span>`:'<span class="metric-change neutral">→ 0.0%</span>'}
@@ -1106,7 +1310,9 @@ function renderTable() {
       </td>
       <td style="color:#888">${p.views??'—'}</td>
       <td>${p.hot?`<span class="hot-badge">🔥 #${p.hot}</span>`:'<span class="not-listed">未上榜</span>'}</td>
-      <td style="color:#aaa">${p.by||'—'}</td>
+      <td><input type="text" value="${escHtml(p.by||'')}" style="width:55px;color:#aaa;background:transparent;border:1px solid transparent"
+        onfocus="this.style.borderColor='#333';this.style.background='#111'"
+        onblur="updateField('${p.id}','by',this.value);this.style.borderColor='transparent';this.style.background='transparent'" placeholder="—" /></td>
       <td>${p.url?`<a class="link-btn" href="${escHtml(p.url)}" target="_blank">查看</a>`:'—'}</td>
       <td>
         <button class="del-btn" onclick="deletePost('${p.id}')" title="删除">✕</button>
@@ -1118,11 +1324,6 @@ function renderTable() {
   if (latest) {
     document.getElementById('lastUpdate').textContent = '最后更新：' + formatDateTime(new Date(latest));
   }
-}
-
-function updateField(id, field, value) {
-  const post = posts.find(p => p.id === id);
-  if (post) post[field] = value;
 }
 
 function renderAll() {
@@ -1203,17 +1404,28 @@ function showToast(msg) {
   el._t = setTimeout(() => { el.style.opacity = '0'; }, 2500);
 }
 
-// Keyboard & close modal on overlay
+// ──────────────────────────────────────────────
+// Init
+// ──────────────────────────────────────────────
+async function init() {
+  // Load manual months from localStorage (small data, OK to use local)
+  try {
+    manualMonths = JSON.parse(localStorage.getItem('rt_manual_months') || '[]');
+  } catch(e) { manualMonths = []; }
+
+  await loadData();
+
+  document.getElementById('pageLoading').style.display = 'none';
+  isLoading = false;
+  renderAll();
+}
+
 document.getElementById('addModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeAddModal(); });
 document.getElementById('monthModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeMonthModal(); });
 document.getElementById('f_url').addEventListener('keydown', e => { if (e.key === 'Enter') fetchAndAdd(); });
 document.getElementById('newMonthInput').addEventListener('keydown', e => { if (e.key === 'Enter') addManualMonth(); });
 
-// ──────────────────────────────────────────────
-// Init
-// ──────────────────────────────────────────────
-loadData();
-renderAll();
+init();
 </script>
 </body>
 </html>
